@@ -1,0 +1,50 @@
+# ──────── Node / Vite ────────
+node_modules/
+.vite/
+dist/
+*.log
+.npm/
+
+# ──────── Laravel ────────
+laravel-app/vendor/
+laravel-app/storage/framework/cache/data/*
+laravel-app/storage/framework/sessions/*
+laravel-app/storage/framework/views/*
+laravel-app/storage/framework/testing/*
+laravel-app/storage/logs/*
+laravel-app/bootstrap/cache/*.php
+!laravel-app/bootstrap/cache/.gitignore
+!laravel-app/storage/framework/cache/.gitignore
+!laravel-app/storage/framework/sessions/.gitignore
+!laravel-app/storage/framework/views/.gitignore
+!laravel-app/storage/logs/.gitignore
+
+# ──────── ローカル設定(秘密) ────────
+laravel-app/.env
+laravel-app/.env.backup
+laravel-app/.env.production
+laravel-app/.phpunit.result.cache
+
+# ──────── ビルド成果物 ────────
+# host/public/laravel-app.zip は make bundle で生成するため commit しない
+host/public/laravel-app.zip
+
+# カスタムビルド済み wasm はサイズが大きすぎる(20MB)ので commit しない。
+# 代わりに make build-wasm で再生成する。差し替え済みファイルは無視。
+host/node_modules/
+
+# ──────── OS / Editor ────────
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# ──────── Docker ローカル ────────
+services/mysql/data/
+
+# ──────── 一時 ────────
+tmp/
+*.bak
+*.bak2

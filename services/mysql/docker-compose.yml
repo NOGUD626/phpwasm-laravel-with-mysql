@@ -1,0 +1,26 @@
+services:
+  mysql:
+    # MySQL 8 のデフォルト認証 caching_sha2_password はブラウザWASM経由だと初回鍵交換で
+    # 詰まりやすい。デモでは mysql_native_password を既定にして無用な事故を避ける。
+    # 本番用途では caching_sha2_password + TLS 経路を別途検討すること。
+    image: mysql:8.0
+    container_name: phpwasm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: demodb
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demopass
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>php-wasm Laravel demo — ブラウザ内 Laravel から ブラウザの外の MySQL に繋ぐ</title>
+		<style>
+			:root { color-scheme: light dark; }
+			body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; line-height: 1.6; }
+			h1 { font-size: 20px; }
+			h3 { margin-top: 22px; margin-bottom: 6px; font-size: 14px; }
+			.sub { color: #888; font-size: 13px; margin-top: -8px; }
+			.row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+			.col { flex: 1 1 480px; min-width: 320px; }
+			button { font-size: 13px; padding: 6px 12px; border-radius: 6px; border: 1px solid #4445; cursor: pointer; margin: 2px 2px 2px 0; }
+			button:disabled { opacity: .45; cursor: not-allowed; }
+			#boot { background: #ef4444; color: #fff; border: none; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 8px; }
+			.api { background: #3b82f6; color: #fff; border: none; }
+			.artisan { background: #14b8a6; color: #fff; border: none; }
+			.tinker { background: #a855f7; color: #fff; border: none; }
+			#status { margin: 12px 0; }
+			pre { background: #0b1020; color: #d6e2ff; padding: 10px; border-radius: 6px; overflow: auto; max-height: 300px; font-size: 12px; margin: 6px 0; }
+			textarea { width: 100%; box-sizing: border-box; background: #0b1020; color: #d6e2ff; border: 1px solid #4445; border-radius: 6px; font-family: ui-monospace, monospace; font-size: 12px; padding: 8px; resize: vertical; min-height: 60px; }
+			iframe { width: 100%; height: 520px; border: 1px solid #4445; border-radius: 8px; background: #fff; }
+			.hidden { display: none; }
+			#preview-placeholder { display: grid; place-items: center; height: 520px; border: 1px dashed #4446; border-radius: 8px; color: #888; }
+			.badge { display: inline-block; background: #1112; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+			.section { margin-top: 18px; padding-top: 8px; border-top: 1px solid #4443; }
+			.tabs { display: flex; gap: 2px; border-bottom: 1px solid #4445; margin-top: 18px; }
+			.tab { background: transparent; border: 1px solid transparent; border-bottom: none; padding: 7px 14px; cursor: pointer; font-size: 13px; color: #888; border-radius: 6px 6px 0 0; margin: 0 0 -1px 0; }
+			.tab:hover { color: inherit; }
+			.tab.active { color: inherit; border-color: #4445; background: #11111108; font-weight: 600; }
+			.tab-panel { padding: 12px 0 0; }
+			.tab-panel:not(.active) { display: none; }
+		</style>
+	</head>
+	<body>
+		<h1>🐘 php-wasm Laravel demo + ブラウザの外の MySQL</h1>
+		<p class="sub">
+			バックエンドサーバー無し。<b>本物の Laravel 13 + PHP 8.3</b> を
+			<span class="badge">WebAssembly</span> でブラウザのタブの中だけで動かしつつ、
+			<b>ブラウザの外で動いている MySQL 8</b> へ WebSocket↔TCP プロキシ越しに
+			PDO で接続します。
+		</p>
+
+		<button id="boot">▶ php-wasm を起動して Laravel を立てる</button>
+		<p id="status">状態: <b>未起動</b></p>
+
+		<div class="row">
+			<div class="col">
+				<h3>起動ログ</h3>
+				<pre id="log">(「起動」を押すとここにログが流れます)</pre>
+
+				<div class="tabs" role="tablist">
+					<button class="tab active" data-tab="http"    role="tab">🌐 HTTP</button>
+					<button class="tab"        data-tab="artisan" role="tab">⚙️ artisan</button>
+					<button class="tab"        data-tab="tinker"  role="tab">🧪 tinker</button>
+				</div>
+
+				<div class="tab-panel active" data-panel="http">
+					<button class="api" data-path="/" disabled>GET /</button>
+					<button class="api" data-path="/demo" disabled>GET /demo</button>
+					<button class="api" data-path="/posts" disabled>GET /posts (HTMX UI)</button>
+					<pre id="result">(API レスポンスがここに出ます)</pre>
+				</div>
+
+				<div class="tab-panel" data-panel="artisan">
+					<button class="artisan" data-art="about" disabled title="本家 artisan about は composer -V を proc_open で呼ぶので wasm では失敗する。proc_open を踏まず Laravel/PHP/SAPI/DB/拡張 を自前で集めて表示する代替版。">about (自前版)</button>
+					<button class="artisan" data-art="route:list" disabled>route:list</button>
+					<button class="artisan" data-art="migrate:status" disabled>migrate:status</button>
+					<button class="artisan" data-art="migrate --force" disabled>migrate --force</button>
+					<button class="artisan" data-art="db:show" disabled>db:show</button>
+					<pre id="artisan-out">(artisan の stdout/stderr がここに出ます)</pre>
+				</div>
+
+				<div class="tab-panel" data-panel="tinker">
+					<textarea id="tinker-expr" spellcheck="false">User::count()</textarea>
+					<div>
+						<button class="tinker" id="tinker-run" disabled>▶ 実行 (dump)</button>
+						<button class="tinker" id="tinker-users" disabled>例: User::all()</button>
+						<button class="tinker" id="tinker-posts" disabled>例: DB::table('posts')-&gt;count()</button>
+					</div>
+					<pre id="tinker-out">(tinker の出力がここに出ます)</pre>
+				</div>
+			</div>
+
+			<div class="col">
+				<h3>プレビュー(iframe・リンク遷移できます)</h3>
+				<div id="preview-placeholder">起動するとここに Laravel のミニサイトが出ます</div>
+				<iframe
+					id="preview"
+					class="hidden"
+					sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+				></iframe>
+			</div>
+		</div>
+
+		<script type="module" src="/src/main.ts"></script>
+	</body>
+</html>
