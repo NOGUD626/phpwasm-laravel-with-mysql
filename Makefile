@@ -172,6 +172,10 @@ clean: ## node_modules / vendor / bundle ZIP を全削除
 # 前提条件チェック
 # --------------------------------------------------------------------
 
+.PHONY: shots
+shots: ## docs/screenshots/*.png を puppeteer-core で自動撮影(make up 済み前提)
+	cd $(HOST_DIR) && npm run shots
+
 .PHONY: doctor
 doctor: ## 必要なツールが揃っているか確認
 	@echo "  ── doctor ──"

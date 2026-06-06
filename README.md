@@ -25,6 +25,8 @@
 - Eloquent / migration / artisan / tinker / HTMX + Alpine.js のフォーム CRUD まで動く
 - それを実現する4つの仕掛けが入っている: **(1) カスタム wasm ビルド** **(2) WebSocket↔TCP プロキシ** **(3) WebSocket EventEmitter シム** **(4) Service Worker による iframe スコープ横取り**
 
+![起動完了 — ホスト UI と iframe 内 Laravel ハブ](docs/screenshots/02-booted.png)
+
 ## 構成図
 
 ```mermaid
@@ -105,6 +107,18 @@ make doctor
 - **ホスト UI の「⚙️ artisan」タブ**から `route:list` / `migrate:status` / `migrate --force` / `db:show` / `about (自前版)`
 - **ホスト UI の「🧪 tinker」タブ**から任意 PHP 式を eval(`User::count()`、`DB::table('posts')->count()` 等)
 - **MySQL の `posts` テーブル**を `init.sql` で 3 行 seed、移行/編集すべて永続化
+
+### 画面サンプル
+
+| posts CRUD(HTMX + Alpine.js)| artisan `about`(自前版) |
+|:---:|:---:|
+| ![posts CRUD](docs/screenshots/03-posts.png) | ![artisan about](docs/screenshots/06-artisan-about.png) |
+
+| phpinfo()(`mysqli` / `pdo_mysql` が拡張一覧に並ぶ) | tinker(`DB::table('posts')->count()`) |
+|:---:|:---:|
+| ![phpinfo](docs/screenshots/04-phpinfo.png) | ![tinker](docs/screenshots/07-tinker.png) |
+
+> スクリーンショットは `make shots`(`host/scripts/take-screenshots.mjs`、要 `puppeteer-core` + macOS の Google Chrome)で再生成できます。
 
 ## ファイル tree
 
